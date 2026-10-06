@@ -4,6 +4,9 @@
   "description": "API do Escola Conecta: comunicação entre escola e famílias",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "build": "nest build",
     "start": "nest start",
