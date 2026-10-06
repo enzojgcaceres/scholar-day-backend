@@ -4,7 +4,7 @@ Comunicação entre a escola e as famílias dos alunos: **comunicados com confir
 
 Front-end: repositório `escola-conecta-front`.
 
-Stack: NestJS 12 · TypeORM · PostgreSQL · JWT · Swagger · porta 4001.
+Stack: NestJS 11 · TypeORM · PostgreSQL · JWT · Swagger · porta 4001.
 
 ## Papéis
 
@@ -86,6 +86,11 @@ Regras:
 - Migration já mergeada não se edita: corrija com outra migration.
 - Renomear ou apagar coluna: em dois deploys (adiciona a nova e migra o código; apaga a velha depois).
 - Nunca aponte o `.env` local para o banco de produção.
+
+## Deploy na Vercel
+
+O runtime da Vercel não permite `require()` de módulos ES. O NestJS 12 é só ESM e quebra lá com `ERR_REQUIRE_ESM`, por isso o projeto fica no **NestJS 11** (CommonJS).
+Para testar localmente nas mesmas condições: `npm run build && node --no-experimental-require-module dist/src/main`.
 
 Banco hospedado (Neon, Supabase…): use `DATABASE_URL` com a URL *pooled* e `DB_SSL=true`.
 
