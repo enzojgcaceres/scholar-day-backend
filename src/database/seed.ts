@@ -4,11 +4,12 @@
  *
  *   npm run seed
  *
- * APAGA todas as tabelas antes de inserir. Não rode contra o banco de produção.
+ * APAGA os dados de todas as tabelas antes de inserir. Não mexe no esquema:
+ * as tabelas vêm das migrations (`npm run migration:run`).
+ * Recusa rodar com NODE_ENV=production.
  */
 import 'dotenv/config';
 import * as bcrypt from 'bcrypt';
-import { DataSource } from 'typeorm';
 import { Aluno } from '../alunos/aluno.entity';
 import { Papel } from '../common/enums/papel.enum';
 import { CienciaComunicado } from '../comunicados/ciencia-comunicado.entity';
@@ -16,12 +17,12 @@ import {
   CategoriaComunicado,
   Comunicado,
 } from '../comunicados/comunicado.entity';
-import { typeormOptions } from '../config/typeorm.options';
 import { Evento, TipoEvento } from '../eventos/evento.entity';
 import { Conversa } from '../mensagens/conversa.entity';
 import { Mensagem } from '../mensagens/mensagem.entity';
 import { Turma, Turno } from '../turmas/turma.entity';
 import { Usuario } from '../usuarios/usuario.entity';
+import ds from './data-source';
 
 const SENHA_DEMO = 'Senha@123';
 
@@ -34,11 +35,13 @@ function emDias(dias: number, hora = 8) {
 }
 
 async function main() {
-  const ds = new DataSource({
-    ...typeormOptions((k) => process.env[k]),
-    synchronize: true,
-  });
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('O seed não roda com NODE_ENV=production.');
+  }
   await ds.initialize();
+  if (await ds.showMigrations()) {
+    throw new Error('Há migrations pendentes. Rode antes: npm run migration:run');
+  }
   console.log('Conectado. Limpando tabelas...');
   const tabelas = ds.entityMetadatas.map((m) => `"${m.tableName}"`).join(', ');
   await ds.query(`TRUNCATE ${tabelas} RESTART IDENTITY CASCADE`);

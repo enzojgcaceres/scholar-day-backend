@@ -10,6 +10,13 @@
     "start:dev": "nest start --watch",
     "start:prod": "node dist/src/main",
     "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
+    "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
+    "migration:generate": "npm run typeorm -- migration:generate src/database/migrations/$npm_config_nome",
+    "migration:run": "npm run typeorm -- migration:run",
+    "migration:revert": "npm run typeorm -- migration:revert",
+    "migration:show": "npm run typeorm -- migration:show",
+    "migration:run:prod": "typeorm migration:run -d dist/src/database/data-source.js",
+    "db:reset": "npm run typeorm -- schema:drop && npm run migration:run && npm run seed",
     "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
