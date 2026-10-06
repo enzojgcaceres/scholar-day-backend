@@ -23,7 +23,8 @@ Pré-requisitos: Node 20+ e PostgreSQL (local ou Neon).
 ```bash
 cp .env.example .env        # ajuste DATABASE_URL (ou DB_*) e JWT_SECRET
 npm install
-npm run seed                # cria as tabelas e os dados de demonstração (APAGA o banco!)
+npm run migration:run       # cria/atualiza as tabelas
+npm run seed                # dados de demonstração (APAGA os dados!)
 npm run start:dev           # http://localhost:4001 · Swagger em http://localhost:4001/api
 ```
 
@@ -61,17 +62,32 @@ Tudo exige `Authorization: Bearer <token>`, exceto `POST /auth/entrar` e `GET /s
 | GET    | `/conversas/:id` (marca como lida) | participantes |
 | POST   | `/conversas/:id/mensagens`    | participantes    |
 
-## Banco em produção (Supabase, Neon, Render…)
+## Banco e migrations
 
-No `back/.env`:
+O esquema do banco muda **só por migrations** (`src/database/migrations`). `DB_SYNC` fica sempre `false`.
 
-```
-DATABASE_URL=postgresql://usuario:senha@host:5432/postgres
-DB_SSL=true
-DB_SYNC=false
-```
+| Comando | O que faz |
+| --- | --- |
+| `npm run migration:generate --nome=AdicionaCampoX` | Compara as entidades com o banco do `.env` e gera a migration |
+| `npm run migration:run` | Aplica as migrations pendentes |
+| `npm run migration:revert` | Desfaz a última migration aplicada |
+| `npm run migration:show` | Lista as migrations e quais já rodaram |
+| `npm run db:reset` | Apaga o esquema, roda as migrations e o seed (só em dev!) |
 
-`DB_SYNC=true` cria as tabelas automaticamente a partir das entidades — prático no desenvolvimento, arriscado em produção. Antes de publicar, troque por migrations do TypeORM.
+Fluxo para mudar uma entidade:
+
+1. Altere a entidade e rode `npm run migration:generate --nome=DescricaoDaMudanca` contra o banco de **dev**.
+2. Revise o arquivo gerado, rode `npm run migration:run` e teste.
+3. Commit da entidade **junto com** a migration, no mesmo PR.
+4. No deploy, o build roda `npm run migration:run:prod` antes de publicar.
+
+Regras:
+
+- Migration já mergeada não se edita: corrija com outra migration.
+- Renomear ou apagar coluna: em dois deploys (adiciona a nova e migra o código; apaga a velha depois).
+- Nunca aponte o `.env` local para o banco de produção.
+
+Banco hospedado (Neon, Supabase…): use `DATABASE_URL` com a URL *pooled* e `DB_SSL=true`.
 
 ## Próximos passos sugeridos
 
